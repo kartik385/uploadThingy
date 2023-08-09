@@ -10,7 +10,7 @@ import (
 
 	"net/http"
 
-	readerwriters "karti385/uploadThingy/pkg/readerWriters"
+	tokenUtil "karti385/uploadThingy/pkg/token"
 
 	"karti385/uploadThingy/internal/domain"
 
@@ -19,17 +19,26 @@ import (
 )
 
 func Auth() {
+
 	
-	config,err:=domain.NewConfig()
+	_,err:=tokenUtil.GetToken();
+
+	if(err!=nil) {
+		config,err:=domain.NewConfig()
 	if err!=nil {
 		log.Fatal(err)
 	}
 
-	url := config.AuthCodeURL("x-state")
-
-
+	url := config.AuthCodeURL("state",oauth2.AccessTypeOffline)
 	open.Run(url)
 	server(config)
+	} else {
+		fmt.Println("Already Logged In")
+	}
+
+
+	
+	
 
 }
 
@@ -39,14 +48,11 @@ func server(config *oauth2.Config) {
 	urlchannel := make(chan string)
 
 	mux.HandleFunc("/redirect", func(w http.ResponseWriter, r *http.Request) {
-
 		code := r.URL.Query().Get("code")
-		fmt.Println(code);
+	
 		showThanks(w)
-		getToken(code, config)
+		getToken(code, config,r)
 		urlchannel <- r.UserAgent()
-		
-
 	})
 
 	server := &http.Server{
@@ -71,13 +77,14 @@ func showUrl(ch chan string, server *http.Server) {
 	}
 }
 
-func getToken(code string, config *oauth2.Config) {
-	token, err := config.Exchange(context.Background(), code)
+func getToken(code string, config *oauth2.Config,r *http.Request) {
+	token, err := config.Exchange(r.Context(), code)
 	if !token.Valid() || err != nil {
 		log.Fatal("Error in token exchange")
 	}
+	fmt.Printf("Token is %v",token);
 
-	err=readerwriters.SaveToken(token);
+	err=tokenUtil.SaveToken(token);
 	if err!=nil {
 		log.Fatal(err)
 	}

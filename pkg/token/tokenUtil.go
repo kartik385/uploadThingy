@@ -1,7 +1,9 @@
-package readerwriters
+package token
 
 import (
+	"context"
 	"encoding/gob"
+	"karti385/uploadThingy/internal/domain"
 	"os"
 
 	"golang.org/x/oauth2"
@@ -48,4 +50,24 @@ func GetToken()(*oauth2.Token,error) {
 		return nil,err
 	}
 	return &token,nil
+}
+
+func RefetchToken()(*oauth2.Token,error) {
+	token,err:=GetToken();
+	if err!= nil {
+		return nil,err;
+		
+	}
+	config,err:=domain.NewConfig()
+	if err!= nil {
+		return nil,err;
+		
+	}
+	tokenSource:=config.TokenSource(context.Background(),token);
+	freshToken,err:=tokenSource.Token()
+	if err!=nil {
+		return nil,err;
+		
+	}
+	return freshToken,nil;
 }
