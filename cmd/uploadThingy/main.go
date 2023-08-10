@@ -15,7 +15,7 @@ func main() {
 	app := &cli.App{
 		Name:  "UploadThingy",
 		Usage: "Upload.....",
-		Commands:[]*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name: "login",
 				Aliases: []string{
@@ -34,14 +34,13 @@ func main() {
 				},
 				Usage: "Command for login & auth",
 				Action: func(*cli.Context) error {
-					token,err:=tokenUtil.GetToken()
-					if err!=nil {
+					token, err := tokenUtil.GetToken()
+					if err != nil {
 						panic(err)
 					}
-					fmt.Printf("Token is %v",token.RefreshToken);
+					fmt.Printf("Token is %v", token.RefreshToken)
 					return nil
 				},
-				
 			},
 			{
 				Name: "upload",
@@ -50,16 +49,14 @@ func main() {
 				},
 				Usage: "command For uploading files",
 				Action: func(*cli.Context) error {
-					err:=driveOps.Upload()
-					if err!=nil {
+					err := driveOps.Upload()
+					if err != nil {
 						panic(err)
-						
+
 					}
 
-				
 					return nil
 				},
-				
 			},
 			{
 				Name: "listFiles",
@@ -68,16 +65,35 @@ func main() {
 				},
 				Usage: "command For Listing Drive files",
 				Action: func(*cli.Context) error {
-					err:=driveOps.ListFiles()
-					if err!=nil {
+					err := driveOps.ListFiles()
+					if err != nil {
 						panic(err)
-						
+
 					}
 
-				
 					return nil
 				},
-				
+			},
+			{
+				Name: "download",
+				Aliases: []string{
+					"d",
+				},
+				Usage: "command For downloading Drive files",
+				Action: func(ctx *cli.Context) error {
+					fileId := ctx.Args().Get(0)
+					if fileId == "" {
+						fmt.Println("Please provide correct fleId")
+					} else {
+						err := driveOps.DownloadFile(fileId)
+						if err != nil {
+							panic(err)
+
+						}
+					}
+
+					return nil
+				},
 			},
 			{
 				Name: "refreshToken",
@@ -86,23 +102,16 @@ func main() {
 				},
 				Usage: "Refresh the token",
 				Action: func(*cli.Context) error {
-					token,err:=tokenUtil.RefetchToken()
-					if err!=nil {
+					token, err := tokenUtil.RefetchToken()
+					if err != nil {
 						panic(err)
 					}
-					fmt.Printf("Token is %v",token);
+					fmt.Printf("Token is %v", token)
 					return nil
 				},
-				
 			},
 		},
-		
-		
 	}
-
-	
-
-	
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
